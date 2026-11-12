@@ -1,0 +1,46 @@
+
+name: Build LOOI AI APK
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Extract Android Project
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y unzip
+          unzip -q "LOOI-AI-phase1 (1).zip" -d source
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Setup Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: Build APK
+        working-directory: source/looi-ai-android
+        run: |
+          chmod +x gradlew
+          ./gradlew assembleDebug --stacktrace
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: LOOI-AI-APK
+          path: source/looi-ai-android/app/build/outputs/apk/debug/*.apk
+          if-no-files-found: error
